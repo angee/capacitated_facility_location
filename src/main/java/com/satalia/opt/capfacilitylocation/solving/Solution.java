@@ -5,6 +5,11 @@ import com.satalia.opt.capfacilitylocation.input.Facility;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Stores the solution of the uncapacitated facility location problem
+ *
+ * @author Andrea Rendl-Pitrey
+ */
 public class Solution {
 
   /** the set of facilities that will be opened */
@@ -14,7 +19,7 @@ public class Solution {
   /** the objective value */
   private final double objectiveValue;
 
-  public Solution(
+  Solution(
       final List<Facility> openedFacilities, final Map<Client, Facility> facilityServingClient) {
     this.openedFacilities = openedFacilities;
     this.facilityServingClient = facilityServingClient;

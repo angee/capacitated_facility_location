@@ -38,6 +38,8 @@ import org.slf4j.LoggerFactory;
  *
  * <p>MINIMISE sum (facilities f) (x_j * cost_f) + sum (clients c, facilities f) (y_f_c *
  * costToMeetDemand_f_c)
+ *
+ * @author Andrea Rendl-Pitrey
  */
 public class CbcSolver {
 
@@ -90,63 +92,87 @@ public class CbcSolver {
   private Solution extractSolution() {
     List<Facility> openedFacilities = new ArrayList<>();
     Map<Client, Facility> servicedBy = new HashMap<>();
-
-    for (int facility = 0; facility < input.getNumFacilities(); facility++) {
-      if (Double.compare(isFacilityOpened.get(facility).solutionValue(), 1.0) == 0) {
-        openedFacilities.add(input.getFacilities().get(facility));
-
-        for (int client = 0; client < input.getNumClients(); client++) {
-          if (Double.compare(isDemandMet.get(facility).get(client).solutionValue(), 1.0) == 0) {
-            servicedBy.put(input.getClients().get(client), input.getFacilities().get(facility));
-          }
-        }
-      }
-    }
+    input
+        .facilities()
+        .filter( // filter all facilities that should be opened
+            facility -> Double.compare(isFacilityOpened.get(facility).solutionValue(), 1.0) == 0)
+        .forEach(
+            facility -> { // store the facilities that are opened
+              openedFacilities.add(input.getFacility(facility));
+              input
+                  .clients()
+                  .filter( // filter all clients that are serviced by the open facility
+                      client ->
+                          Double.compare(isDemandMet.get(facility).get(client).solutionValue(), 1.0)
+                              == 0)
+                  .forEach(
+                      client -> // map each client to the facility it is being served by
+                      servicedBy.put(input.getClient(client), input.getFacility(facility)));
+            });
     return new Solution(openedFacilities, servicedBy);
   }
 
   private void createVariables() {
     // x_f       binary:  1 if facility f is opened, 0 otherwise
     isFacilityOpened = new ArrayList<>(input.getNumFacilities());
-    for (int facility = 0; facility < input.getNumFacilities(); facility++) {
-      isFacilityOpened.add(solver.makeIntVar(0, 1, "x_" + (facility + 1)));
-      // TODO: makeBoolVar instead?
-    }
+    input
+        .facilities()
+        .forEach(facility -> isFacilityOpened.add(solver.makeIntVar(0, 1, "x_" + facility)));
+
     // y_f_c     binary: 1 if demand is met by facility f for client c, 0 otherwise
     isDemandMet = new ArrayList<>(input.getNumFacilities());
-    for (int facility = 0; facility < input.getNumFacilities(); facility++) {
-      ArrayList<MPVariable> demandMetForClients = new ArrayList<>(input.getNumClients());
-      for (int client = 0; client < input.getNumClients(); client++) {
-        demandMetForClients.add(solver.makeIntVar(0.0, 1.0, "y_f" + facility + "_c" + client));
-      }
-      isDemandMet.add(demandMetForClients);
-    }
+    input
+        .facilities()
+        .forEach(
+            facility -> {
+              ArrayList<MPVariable> demandMetForClients = new ArrayList<>(input.getNumClients());
+              input
+                  .clients()
+                  .forEach(
+                      client ->
+                          demandMetForClients.add(
+                              solver.makeIntVar(0.0, 1.0, "y_f" + facility + "_c" + client)));
+              isDemandMet.add(demandMetForClients);
+            });
   }
 
   private void createConstraints() {
     // forall clients c:
     //     sum (facilities f) y_f_c = 1     all clients' demand is met
-    for (int client = 0; client < input.getNumClients(); client++) {
-      MPConstraint demandConstraint = solver.makeConstraint(1, 1, "demandConstraint-c" + client);
-      for (int facility = 0; facility < input.getNumFacilities(); facility++) {
-        demandConstraint.setCoefficient(isDemandMet.get(facility).get(client), 1.0);
-      }
-    }
+    input
+        .clients()
+        .forEach(
+            client -> {
+              MPConstraint demandConstraint =
+                  solver.makeConstraint(1, 1, "demandConstraint-c" + client);
+              input
+                  .facilities()
+                  .forEach(
+                      facility ->
+                          demandConstraint.setCoefficient(
+                              isDemandMet.get(facility).get(client), 1.0));
+            });
+
     // forall facilities f:
     //     sum (clients c) (demand_c * y_f_c)  - capacity_f * x_f  <= 0      do not exceed f's
     // capacity
-    for (int facility = 0; facility < input.getNumFacilities(); facility++) {
-      MPConstraint capacityConstraint =
-          solver.makeConstraint(-MPSolver.infinity(), 0, "capacityConstraint-f" + facility);
-      // sum (clients c) (demand_c * y_f_c)
-      for (int client = 0; client < input.getNumClients(); client++) {
-        capacityConstraint.setCoefficient(
-            isDemandMet.get(facility).get(client), input.getClients().get(client).getDemand());
-      }
-      // capacity_f * x_f
-      capacityConstraint.setCoefficient(
-          isFacilityOpened.get(facility), input.getFacilities().get(facility).getCapacity() * -1);
-    }
+    input
+        .facilities()
+        .forEach(
+            facility -> {
+              MPConstraint capacityConstraint =
+                  solver.makeConstraint(-MPSolver.infinity(), 0, "capacityConstraint-f" + facility);
+              input // sum (clients c) (demand_c * y_f_c)
+                  .clients()
+                  .forEach(
+                      client ->
+                          capacityConstraint.setCoefficient(
+                              isDemandMet.get(facility).get(client),
+                              input.getClient(client).getDemand()));
+              // capacity_f * x_f
+              capacityConstraint.setCoefficient(
+                  isFacilityOpened.get(facility), input.getFacility(facility).getCapacity() * -1);
+            });
   }
 
   private void createObjective() {
@@ -154,22 +180,24 @@ public class CbcSolver {
     //      sum (facilities f) (x_j * cost_f)
     //    + sum (clients c, facilities f) (y_f_c * costToMeetDemand_f_c)
     MPObjective objective = solver.objective();
-    for (int facility = 0; facility < input.getNumFacilities(); facility++) {
-      objective.setCoefficient(
-          isFacilityOpened.get(facility),
-          input.getFacilities().get(facility).getBuildingCost().getCost());
-    }
-    for (int client = 0; client < input.getNumClients(); client++) {
-      for (int facility = 0; facility < input.getNumFacilities(); facility++) {
-        objective.setCoefficient(
-            isDemandMet.get(facility).get(client),
-            input
-                .getFacilities()
-                .get(facility)
-                .getCostToMeetDemand(input.getClients().get(client))
-                .getCost());
-      }
-    }
+    input
+        .facilities()
+        .forEach(
+            facility -> // sum (facilities f) (x_j * cost_f)
+            objective.setCoefficient(
+                    isFacilityOpened.get(facility), input.getBuildingCost(facility)));
+    input
+        .clients()
+        .forEach(
+            client ->
+                input
+                    .facilities()
+                    .forEach(
+                        facility -> // sum (clients c, facilities f) (y_f_c * costToMeetDemand_f_c)
+                        objective.setCoefficient(
+                                isDemandMet.get(facility).get(client),
+                                input.getCostToMeetDemand(facility, client))));
+
     objective.minimization();
   }
 }
