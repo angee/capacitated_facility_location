@@ -29,11 +29,13 @@
       <version>2.10.0</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.7.5</version>
     </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
@@ -44,6 +46,12 @@
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
       <version>3.9.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.ortools</groupId>
+      <artifactId>ortools</artifactId>
+      <version>1.0</version>
     </dependency>
 
   </dependencies>

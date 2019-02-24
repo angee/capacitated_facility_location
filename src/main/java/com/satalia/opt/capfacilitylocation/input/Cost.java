@@ -13,7 +13,7 @@ public class Cost {
     this.cost = cost;
   }
 
-  double getCost() {
+  public double getCost() {
     return this.cost;
   }
 

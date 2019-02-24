@@ -2,6 +2,7 @@ package com.satalia.opt.capfacilitylocation;
 
 import com.satalia.opt.capfacilitylocation.input.BenchmarkReader;
 import com.satalia.opt.capfacilitylocation.input.ProblemInput;
+import com.satalia.opt.capfacilitylocation.solving.CbcSolver;
 import java.io.IOException;
 
 public class Main {
@@ -16,6 +17,8 @@ public class Main {
     try {
       BenchmarkReader reader = new BenchmarkReader(args[0]);
       ProblemInput problemInput = reader.readBeasleyBenchmark();
+      CbcSolver solver = new CbcSolver(problemInput);
+
     } catch (IOException e) {
       e.printStackTrace();
     }

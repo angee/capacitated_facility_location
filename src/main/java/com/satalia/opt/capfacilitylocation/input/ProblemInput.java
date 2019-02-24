@@ -19,4 +19,12 @@ public class ProblemInput {
   public List<Client> getClients() {
     return this.clients;
   }
+
+  public int getNumFacilities() {
+    return this.facilities.size();
+  }
+
+  public int getNumClients() {
+    return this.clients.size();
+  }
 }
