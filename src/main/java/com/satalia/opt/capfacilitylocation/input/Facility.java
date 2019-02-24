@@ -62,4 +62,9 @@ public class Facility {
     }
     return false;
   }
+
+  @Override
+  public String toString() {
+    return id;
+  }
 }

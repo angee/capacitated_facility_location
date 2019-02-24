@@ -1,7 +1,5 @@
 package com.satalia.opt.capfacilitylocation.input;
 
-import java.util.Map;
-
 /**
  * Represents a client in the capacitated facility problem.
  *
@@ -30,5 +28,10 @@ public class Client {
       return id.equals(((Client) o).id);
     }
     return false;
+  }
+
+  @Override
+  public String toString() {
+    return id;
   }
 }

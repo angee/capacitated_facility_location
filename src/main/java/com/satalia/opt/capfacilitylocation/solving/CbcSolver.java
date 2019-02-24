@@ -3,10 +3,17 @@ package com.satalia.opt.capfacilitylocation.solving;
 import com.google.ortools.linearsolver.MPConstraint;
 import com.google.ortools.linearsolver.MPObjective;
 import com.google.ortools.linearsolver.MPSolver;
+import com.google.ortools.linearsolver.MPSolver.ResultStatus;
 import com.google.ortools.linearsolver.MPVariable;
+import com.satalia.opt.capfacilitylocation.input.Client;
+import com.satalia.opt.capfacilitylocation.input.Facility;
 import com.satalia.opt.capfacilitylocation.input.ProblemInput;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Mixed integer programming solver for the capacitated facility location problem.
@@ -38,9 +45,13 @@ public class CbcSolver {
     System.loadLibrary("jniortools");
   }
 
-  private final ProblemInput input;
+  private static final Logger LOG = LoggerFactory.getLogger(CbcSolver.class);
 
+  /** the problem specification/input */
+  private final ProblemInput input;
+  /** the MIP solver object */
   private MPSolver solver;
+
   /** x: 0-1 variable that is 1 if facility i is opened */
   private List<MPVariable> isFacilityOpened;
   /**
@@ -58,6 +69,40 @@ public class CbcSolver {
     createVariables();
     createConstraints();
     createObjective();
+    LOG.info(
+        "Created model with "
+            + solver.numVariables()
+            + " variables and "
+            + solver.numConstraints()
+            + " constraints.");
+    LOG.debug("LP model: \n" + solver.exportModelAsLpFormat(true));
+  }
+
+  public Solution solve() {
+    ResultStatus resultStatus = solver.solve();
+    if (resultStatus == ResultStatus.OPTIMAL || resultStatus == ResultStatus.FEASIBLE) {
+      return extractSolution();
+    } else {
+      throw new RuntimeException("Could not solve problem. Solver result status: " + resultStatus);
+    }
+  }
+
+  private Solution extractSolution() {
+    List<Facility> openedFacilities = new ArrayList<>();
+    Map<Client, Facility> servicedBy = new HashMap<>();
+
+    for (int facility = 0; facility < input.getNumFacilities(); facility++) {
+      if (Double.compare(isFacilityOpened.get(facility).solutionValue(), 1.0) == 0) {
+        openedFacilities.add(input.getFacilities().get(facility));
+
+        for (int client = 0; client < input.getNumClients(); client++) {
+          if (Double.compare(isDemandMet.get(facility).get(client).solutionValue(), 1.0) == 0) {
+            servicedBy.put(input.getClients().get(client), input.getFacilities().get(facility));
+          }
+        }
+      }
+    }
+    return new Solution(openedFacilities, servicedBy);
   }
 
   private void createVariables() {
@@ -92,7 +137,7 @@ public class CbcSolver {
     // capacity
     for (int facility = 0; facility < input.getNumFacilities(); facility++) {
       MPConstraint capacityConstraint =
-          solver.makeConstraint(0, MPSolver.infinity(), "capacityConstraint-f" + facility);
+          solver.makeConstraint(-MPSolver.infinity(), 0, "capacityConstraint-f" + facility);
       // sum (clients c) (demand_c * y_f_c)
       for (int client = 0; client < input.getNumClients(); client++) {
         capacityConstraint.setCoefficient(
