@@ -72,4 +72,15 @@ public class FacilityTest {
 
     new Facility(capacity, buildingCost, costToMeetDemand, id);
   }
+
+  @Test
+  public void getCostForClient() {
+    String id = "1";
+    double capacity = 1000;
+    double expectedCost = 8000;
+    Cost buildingCost = new Cost(expectedCost);
+    Facility facility = new Facility(capacity, buildingCost, costToMeetDemand, id);
+
+    assertEquals(costA, facility.getCostToMeetDemand(clientA));
+  }
 }

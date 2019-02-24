@@ -12,4 +12,11 @@ public class ProblemInput {
     this.clients = clients;
   }
 
+  public List<Facility> getFacilities() {
+    return this.facilities;
+  }
+
+  public List<Client> getClients() {
+    return this.clients;
+  }
 }
