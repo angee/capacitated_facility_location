@@ -9,16 +9,16 @@ public class Facility {
   /** the capacity of the facility (how much demand it can match) */
   private final double capacity;
   /** the cost to build the facility */
-  private final double buildingCost;
-  /** the unique identifier for the facility */
-  private final FacilityID id;
+  private final Cost buildingCost;
+  /** the unique name/identifier for the facility */
+  private final String id;
 
-  public Facility(final double capacity, final double buildingCost, final FacilityID id) {
+  public Facility(final double capacity, final Cost buildingCost, final String id) {
     if (capacity < 0) {
       throw new RuntimeException("Capacity must be larger or equal to zero instead of " + capacity);
     }
     this.capacity = capacity;
-    if (buildingCost < 0) {
+    if (!buildingCost.isGreaterOrEqualZero()) {
       throw new RuntimeException(
           "Cost for setting up the facility must be larger than zero instead of: " + buildingCost);
     }
@@ -30,7 +30,7 @@ public class Facility {
     return capacity;
   }
 
-  public double getBuildingCost() {
+  public Cost getBuildingCost() {
     return buildingCost;
   }
 
