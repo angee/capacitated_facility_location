@@ -1,2 +1,3 @@
-# capacitated_facility_location
-Solving the capaciated facility location problem
+# capacitated facility location
+
+Code for solving the capaciated facility location problem.
