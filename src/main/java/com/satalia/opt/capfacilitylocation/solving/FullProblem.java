@@ -41,13 +41,13 @@ import org.slf4j.LoggerFactory;
  *
  * @author Andrea Rendl-Pitrey
  */
-public class CbcSolver {
+public class FullProblem {
 
   static {
     System.loadLibrary("jniortools");
   }
 
-  private static final Logger LOG = LoggerFactory.getLogger(CbcSolver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FullProblem.class);
 
   /** the problem specification/input */
   private final ProblemInput input;
@@ -62,7 +62,7 @@ public class CbcSolver {
    */
   private List<List<MPVariable>> isDemandMet;
 
-  public CbcSolver(ProblemInput problemInput) {
+  public FullProblem(final ProblemInput problemInput) {
     this.input = problemInput;
     this.solver =
         new MPSolver(

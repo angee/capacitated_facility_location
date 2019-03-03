@@ -19,7 +19,7 @@ public class Solution {
   /** the objective value */
   private final double objectiveValue;
 
-  Solution(
+  public Solution(
       final List<Facility> openedFacilities, final Map<Client, Facility> facilityServingClient) {
     this.openedFacilities = openedFacilities;
     this.facilityServingClient = facilityServingClient;

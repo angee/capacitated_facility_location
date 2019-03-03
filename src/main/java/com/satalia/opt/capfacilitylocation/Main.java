@@ -2,7 +2,7 @@ package com.satalia.opt.capfacilitylocation;
 
 import com.satalia.opt.capfacilitylocation.input.BenchmarkReader;
 import com.satalia.opt.capfacilitylocation.input.ProblemInput;
-import com.satalia.opt.capfacilitylocation.solving.CbcSolver;
+import com.satalia.opt.capfacilitylocation.solving.FullProblem;
 import com.satalia.opt.capfacilitylocation.solving.Solution;
 import java.io.IOException;
 
@@ -17,7 +17,7 @@ public class Main {
     try {
       BenchmarkReader reader = new BenchmarkReader(args[0]);
       ProblemInput problemInput = reader.readBeasleyBenchmark();
-      CbcSolver solver = new CbcSolver(problemInput);
+      FullProblem solver = new FullProblem(problemInput);
       Solution solution = solver.solve();
       System.out.println(solution);
 
