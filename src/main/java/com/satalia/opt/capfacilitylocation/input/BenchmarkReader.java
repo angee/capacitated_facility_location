@@ -12,8 +12,8 @@ import java.util.Map;
 
 /**
  * Reads the problem input from a benchmark file. Currently Beasley's benchmark format is supported
- * (see http://www.di.unipi.it/optimize/Data/mexch/BeasleyData.zip  or
- *      http://or-brescia.unibs.it/instances/instances_sscflp)
+ * (see http://www.di.unipi.it/optimize/Data/mexch/BeasleyData.zip or
+ * http://or-brescia.unibs.it/instances/instances_sscflp)
  *
  * @author Andrea Rendl-Pitrey
  */
@@ -36,18 +36,18 @@ public class BenchmarkReader {
     private int lineNumber = 0;
     private BufferedReader reader;
 
-    public Reader(final String filename) throws FileNotFoundException {
+    Reader(final String filename) throws FileNotFoundException {
       FileReader fileReader = new FileReader(filename);
       reader = new BufferedReader(fileReader);
     }
 
-    public String readNextLine() throws IOException {
+    String readNextLine() throws IOException {
       String line = reader.readLine();
       lineNumber++;
       return line;
     }
 
-    public int getLineNumber() {
+    int getLineNumber() {
       return lineNumber;
     }
   }
@@ -74,7 +74,8 @@ public class BenchmarkReader {
     String line = reader.readNextLine();
     String[] words = line.split(" ");
     if (words.length != 2) {
-      throw new RuntimeException("Invalid benchmark file. Expecting 2 words in line: " + line);
+      throw new RuntimeException(
+          "Invalid benchmark file. Expecting 2 words in line 1 instead of: " + line);
     }
     numFacilities = Integer.parseInt(words[0]);
     numClients = Integer.parseInt(words[1]);
@@ -93,7 +94,11 @@ public class BenchmarkReader {
       }
       String[] words = line.split(" "); // Format of line: "capacity cost"
       if (words.length != 2) {
-        throw new RuntimeException("Invalid benchmark file. Expecting 2 words in line: " + line);
+        throw new RuntimeException(
+            "Invalid benchmark file. Expecting 2 words in line "
+                + reader.getLineNumber()
+                + " instead of: "
+                + line);
       }
       double capacity = Double.parseDouble(words[0]); // read capacity
       double facilityCost = Double.parseDouble(words[1]); // read cost
@@ -130,7 +135,9 @@ public class BenchmarkReader {
       String line = reader.readNextLine();
       if (line == null) {
         throw new RuntimeException(
-            "Expecting demand cost for serving clients in line " + reader.getLineNumber() + ", but line is empty.");
+            "Expecting demand cost for serving clients in line "
+                + reader.getLineNumber()
+                + ", but line is empty.");
       }
       Map<Client, Cost> costToMeetDemand = new HashMap<>(this.numFacilities);
       String[] words = line.split(" "); // Format of line: "cost_c1  cost_c2 ... cost_cn"
